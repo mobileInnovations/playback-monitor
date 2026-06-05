@@ -17,7 +17,7 @@
 
       <v-divider vertical class="mx-2" />
 
-      <!-- <v-text-field
+      <v-text-field
         v-model="newVideoUrl"
         placeholder="Paste video URL…"
         density="compact"
@@ -38,7 +38,7 @@
         prepend-icon="mdi-open-in-new"
         @click="openInNewTab"
         >Open</v-btn
-      > -->
+      >
     </div>
 
     <!-- Panels -->
@@ -48,7 +48,7 @@
         <h2>Real time</h2>
         <div class="video-box">
           <iframe
-            :src="videoSrc"
+            :src="newVideoUrl"
             width="100%"
             height="100%"
             frameborder="0"
@@ -59,7 +59,7 @@
           <div class="field">
             <label>Device ID</label>
             <v-text-field
-              v-model="props.payload.deviceId"
+              v-model="payloadState.deviceId"
               density="compact"
               hide-details
               variant="outlined"
@@ -68,7 +68,7 @@
           <div class="field">
             <label>Channel</label>
             <v-text-field
-              v-model="props.payload.chs"
+              v-model="payloadState.chs"
               density="compact"
               hide-details
               variant="outlined"
@@ -151,7 +151,7 @@
         <h2>Video playback</h2>
         <div class="video-box">
           <iframe
-            :src="videoSrc"
+            :src="newVideoUrl"
             width="100%"
             height="100%"
             frameborder="0"
@@ -162,7 +162,7 @@
           <div class="field">
             <label>Device ID</label>
             <v-text-field
-              v-model="props.payload.deviceId"
+              v-model="payloadState.deviceId"
               density="compact"
               hide-details
               variant="outlined"
@@ -171,7 +171,7 @@
           <div class="field">
             <label>Channel</label>
             <v-text-field
-              v-model="props.payload.chs"
+              v-model="payloadState.chs"
               density="compact"
               hide-details
               variant="outlined"
@@ -180,14 +180,14 @@
           <div class="field">
             <label>Start time</label>
             <DateTimeComponent
-              v-model="props.payload.startTime"
+              v-model="payloadState.startTime"
               label="Start time"
             />
           </div>
           <div class="field">
             <label>End time</label>
             <DateTimeComponent
-              v-model="props.payload.endTime"
+              v-model="payloadState.endTime"
               label="End time"
             />
           </div>
@@ -282,7 +282,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, reactive, watch, onMounted } from "vue";
 import DateTimeComponent from "./input/DateTimeComponent.vue";
 
 const props = defineProps({
@@ -313,27 +313,52 @@ const pbState = ref("play"); // "play" | "pause" | "stop"
 const pbSound = ref(true);
 const pbSpeed = ref(0);
 
-// ── Methods ───────────────────────────────────────────────────────────────────
+const payloadState = reactive({
+  deviceId: props.payload.deviceId || "",
+  chs: props.payload.chs || "",
+  startTime: props.payload.startTime || "",
+  endTime: props.payload.endTime || "",
+});
+
 const decodeVideoUrl = (url) => {
   try {
+    return url;
   } catch {
     return url;
   }
 };
 
-// const loadVideoUrl = () => {
-//   if (!newVideoUrl.value) return;
-//   videoSrc.value = decodeVideoUrl(newVideoUrl.value);
-// };
+const newVideoUrl = ref(props.payload.videoUrl || "");
+const videoSrc = ref(newVideoUrl.value ? decodeVideoUrl(newVideoUrl.value) : "");
 
-// const openInNewTab = () => {
-//   const url = newVideoUrl.value || videoSrc.value;
-//   try {
-//     window.open(url, "_blank");
-//   } catch (e) {
-//     console.warn(e);
-//   }
-// };
+
+const updateUrl = () => {
+  const params = new URLSearchParams();
+
+  if (payloadState.deviceId) params.set("deviceId", payloadState.deviceId);
+  if (payloadState.chs) params.set("chs", payloadState.chs);
+  if (payloadState.startTime) params.set("startTime", payloadState.startTime);
+  if (payloadState.endTime) params.set("endTime", payloadState.endTime);
+  if (newVideoUrl.value) params.set("videoUrl", newVideoUrl.value);
+
+  const query = params.toString();
+  const newUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+  window.history.replaceState(null, "", newUrl);
+};
+
+const loadVideoUrl = () => {
+  if (!newVideoUrl.value) return;
+  videoSrc.value = decodeVideoUrl(newVideoUrl.value);
+};
+
+const openInNewTab = () => {
+  const url = newVideoUrl.value || videoSrc.value;
+  try {
+    window.open(url, "_blank");
+  } catch (e) {
+    console.warn(e);
+  }
+};
 
 const rtAction = (state) => {
   rtState.value = state;
@@ -343,17 +368,25 @@ const pbAction = (state) => {
 };
 
 const initialize = () => {
-  console.log("Initializing Monitor with props:", props);
-
   if (props.videoType === "RealVideo") {
     showMode.value = "real-time";
   } else if (props.videoType === "Playback") {
     showMode.value = "playback";
   }
-  console.log("Initial showMode:", showMode.value);
+  updateUrl();
 };
 
-// ── Lifecycle ─────────────────────────────────────────────────────────────────
+watch(
+  [
+    () => newVideoUrl.value,
+    () => payloadState.deviceId,
+    () => payloadState.chs,
+    () => payloadState.startTime,
+    () => payloadState.endTime,
+  ],
+  updateUrl,
+);
+
 onMounted(() => {
   initialize();
 });
