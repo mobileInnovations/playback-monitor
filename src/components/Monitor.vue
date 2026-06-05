@@ -297,7 +297,6 @@ const props = defineProps({
 });
 
 const modes = [
-  { label: "All", value: "all" },
   { label: "Real time", value: "real-time" },
   { label: "Playback", value: "playback" },
 ];
