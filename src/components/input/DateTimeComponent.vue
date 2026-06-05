@@ -3,8 +3,8 @@
     <label v-if="label" class="date-time-label">{{ label }}</label>
     <div class="date-time-inputs">
       <input
-        type="text"
-        placeholder="dd/mm/yyyy"
+        type="date"
+        placeholder="yyyy-mm-dd"
         :value="dateValue"
         @input="updateDate($event.target.value)"
         class="date-input"
@@ -47,15 +47,13 @@ const formatDateTime = (value) => {
   }
 
   return {
-    date: parsed.format('DD MMM YYYY'),
+    date: parsed.format('YYYY-MM-DD'),
     time: parsed.format('HH:mm')
   }
 }
 
-const { date, time } = formatDateTime(props.modelValue)
-
-const dateValue = computed(() => date)
-const timeValue = computed(() => time)
+const dateValue = computed(() => formatDateTime(props.modelValue).date)
+const timeValue = computed(() => formatDateTime(props.modelValue).time)
 
 const emitValue = (datePart, timePart) => {
   if (!datePart || !timePart) {
@@ -63,8 +61,8 @@ const emitValue = (datePart, timePart) => {
     return
   }
 
-  const [day, month, year] = datePart.split('/')
-  if (!day || !month || !year) {
+  const [year, month, day] = datePart.split('-')
+  if (!year || !month || !day) {
     emit('update:modelValue', '')
     return
   }
