@@ -1,18 +1,24 @@
 <template>
   <v-app>
     <v-main>
-      <Monitor />
-      <v-btn
-        class="m-2"
-        icon="mdi-theme-light-dark"
-        location="top right"
-        position="absolute"
-        @click="$vuetify.theme.cycle()"
-      />
+      <Monitor :video-type="videoType" :payload="payload" />
     </v-main>
   </v-app>
 </template>
 
 <script setup>
+import { ref } from "vue";
 import Monitor from "@/components/Monitor.vue";
+
+const url = new URL(window.location.href);
+const params = new URLSearchParams(window.location.search);
+const urlParams = Object.fromEntries(params.entries());
+const payload = urlParams;
+const videoType = ref("");
+
+if (url.pathname.includes("RealVideo")) {
+  videoType.value = "RealVideo";
+} else if (url.pathname.includes("PlayBack")) {
+  videoType.value = "Playback";
+}
 </script>

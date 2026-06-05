@@ -17,7 +17,7 @@
 
       <v-divider vertical class="mx-2" />
 
-      <v-text-field
+      <!-- <v-text-field
         v-model="newVideoUrl"
         placeholder="Paste video URL…"
         density="compact"
@@ -38,7 +38,7 @@
         prepend-icon="mdi-open-in-new"
         @click="openInNewTab"
         >Open</v-btn
-      >
+      > -->
     </div>
 
     <!-- Panels -->
@@ -59,7 +59,7 @@
           <div class="field">
             <label>Device ID</label>
             <v-text-field
-              v-model="monitorData.deviceID"
+              v-model="props.payload.deviceId"
               density="compact"
               hide-details
               variant="outlined"
@@ -68,7 +68,7 @@
           <div class="field">
             <label>Channel</label>
             <v-text-field
-              v-model="monitorData.channel"
+              v-model="props.payload.chs"
               density="compact"
               hide-details
               variant="outlined"
@@ -162,7 +162,7 @@
           <div class="field">
             <label>Device ID</label>
             <v-text-field
-              v-model="monitorData.deviceID"
+              v-model="props.payload.deviceId"
               density="compact"
               hide-details
               variant="outlined"
@@ -171,7 +171,7 @@
           <div class="field">
             <label>Channel</label>
             <v-text-field
-              v-model="monitorData.channel"
+              v-model="props.payload.chs"
               density="compact"
               hide-details
               variant="outlined"
@@ -180,13 +180,16 @@
           <div class="field">
             <label>Start time</label>
             <DateTimeComponent
-              v-model="monitorData.startTime"
+              v-model="props.payload.startTime"
               label="Start time"
             />
           </div>
           <div class="field">
             <label>End time</label>
-            <DateTimeComponent v-model="monitorData.endTime" label="End time" />
+            <DateTimeComponent
+              v-model="props.payload.endTime"
+              label="End time"
+            />
           </div>
         </div>
         <div class="btns">
@@ -281,11 +284,17 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import DateTimeComponent from "./input/DateTimeComponent.vue";
-import { queryGtOfDevice } from "@/stores/api.ts";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const DEFAULT_URL =
-  "https://superhero.mobileinnovation.asia/vss/apiPage/RealVideo.html?token=deb4cc288714456aa510c3cef0f6b193&deviceId=31086000100&chs=1&stream=0&wnum=1&panel=1&buffer=2000";
+const props = defineProps({
+  videoType: {
+    type: String,
+    default: "",
+  },
+  payload: {
+    type: Object,
+    default: () => ({}),
+  },
+});
 
 const modes = [
   { label: "All", value: "all" },
@@ -297,15 +306,6 @@ const speeds = [0, 1, 2, 4, 8, 16];
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const showMode = ref("all");
-const newVideoUrl = ref(DEFAULT_URL);
-const videoSrc = ref("");
-
-const monitorData = ref({
-  deviceID: "31086000100",
-  channel: "1",
-  startTime: "2024-06-01 10:00:00",
-  endTime: "2024-06-01 11:00:00",
-});
 
 const rtState = ref("play"); // "play" | "pause" | "stop"
 const rtSound = ref(true);
@@ -317,38 +317,24 @@ const pbSpeed = ref(0);
 // ── Methods ───────────────────────────────────────────────────────────────────
 const decodeVideoUrl = (url) => {
   try {
-    const parsed = new URL(url);
-    const params = {};
-    parsed.searchParams.forEach((v, k) => {
-      params[k] = /^[0-9]+$/.test(v) ? Number(v) : v;
-    });
-
-    if (params.deviceId) monitorData.value.deviceID = params.deviceId;
-    if (params.wnum !== undefined)
-      monitorData.value.channel = String(params.wnum);
-    if (params.stream === 0) showMode.value = "playback";
-
-    return parsed.origin === "https://superhero.mobileinnovation.asia"
-      ? parsed.pathname + parsed.search
-      : url;
   } catch {
     return url;
   }
 };
 
-const loadVideoUrl = () => {
-  if (!newVideoUrl.value) return;
-  videoSrc.value = decodeVideoUrl(newVideoUrl.value);
-};
+// const loadVideoUrl = () => {
+//   if (!newVideoUrl.value) return;
+//   videoSrc.value = decodeVideoUrl(newVideoUrl.value);
+// };
 
-const openInNewTab = () => {
-  const url = newVideoUrl.value || videoSrc.value;
-  try {
-    window.open(url, "_blank");
-  } catch (e) {
-    console.warn(e);
-  }
-};
+// const openInNewTab = () => {
+//   const url = newVideoUrl.value || videoSrc.value;
+//   try {
+//     window.open(url, "_blank");
+//   } catch (e) {
+//     console.warn(e);
+//   }
+// };
 
 const rtAction = (state) => {
   rtState.value = state;
@@ -357,22 +343,20 @@ const pbAction = (state) => {
   pbState.value = state;
 };
 
-const getDeviceInfo = async (deviceId) => {
-  try {
-    const response = await queryGtOfDevice(deviceId);
-    if (response?.data) {
-      const d = response.data;
-      if (d.deviceId) monitorData.value.deviceID = d.deviceId;
-    }
-  } catch (e) {
-    console.error("Error fetching device info:", e);
+const initialize = () => {
+  console.log("Initializing Monitor with props:", props);
+
+  if (props.videoType === "RealVideo") {
+    showMode.value = "real-time";
+  } else if (props.videoType === "Playback") {
+    showMode.value = "playback";
   }
+  console.log("Initial showMode:", showMode.value);
 };
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(() => {
-  videoSrc.value = decodeVideoUrl(DEFAULT_URL);
-  getDeviceInfo(monitorData.value.deviceID);
+  initialize();
 });
 </script>
 
@@ -423,6 +407,8 @@ onMounted(() => {
   gap: 8px;
   flex: 1;
   min-height: 0;
+  margin: 0 150px; /* Center panels with max width */
+  height: 100%;
 }
 
 .panels.single {
