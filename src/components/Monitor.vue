@@ -15,7 +15,7 @@
         </v-btn>
       </div>
 
-      <v-divider vertical class="mx-2" />
+      <!-- <v-divider vertical class="mx-2" />
 
       <v-text-field
         v-model="newVideoUrl"
@@ -38,23 +38,37 @@
         prepend-icon="mdi-open-in-new"
         @click="openInNewTab"
         >Open</v-btn
-      >
+      > -->
     </div>
 
     <!-- Panels -->
     <div class="panels" :class="{ single: showMode !== 'all' }">
       <!-- Real Time Panel -->
-      <div v-if="showMode !== 'playback'" class="panel">
+      <div v-if="showMode !== 'PlayBack'" class="panel">
         <h2>Real time</h2>
         <div class="video-box">
           <iframe
-            :src="newVideoUrl"
+            :src="videoSrc"
             width="100%"
             height="100%"
             frameborder="0"
             allowfullscreen
           />
         </div>
+        <div>
+          <a
+            v-if="videoSrc"
+            :href="videoSrc"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="external-link"
+          >
+            link video
+          </a>
+
+          <span v-else> No video URL provided </span>
+        </div>
+
         <div class="fields">
           <div class="field">
             <label>Device ID</label>
@@ -147,16 +161,29 @@
       </div>
 
       <!-- Playback Panel -->
-      <div v-if="showMode !== 'real-time'" class="panel">
-        <h2>Video playback</h2>
+      <div v-if="showMode !== 'RealVideo'" class="panel">
+        <h2>Video PlayBack</h2>
         <div class="video-box">
           <iframe
-            :src="newVideoUrl"
+            :src="videoSrc"
             width="100%"
             height="100%"
             frameborder="0"
             allowfullscreen
           />
+        </div>
+        <div>
+          <a
+            v-if="videoSrc"
+            :href="videoSrc"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="external-link"
+          >
+            link video
+          </a>
+
+          <span v-else> No video URL provided </span>
         </div>
         <div class="fields">
           <div class="field">
@@ -179,19 +206,14 @@
           </div>
           <div class="field">
             <label>Start time</label>
-            <DateTimeComponent
-              v-model="payloadState.startTime"
-              label="Start time"
-            />
+            <DateTimeComponent v-model="payloadState.startTime" />
           </div>
           <div class="field">
             <label>End time</label>
-            <DateTimeComponent
-              v-model="payloadState.endTime"
-              label="End time"
-            />
+            <DateTimeComponent v-model="payloadState.endTime" />
           </div>
         </div>
+
         <div class="btns">
           <v-btn
             :color="pbState === 'play' ? 'primary' : undefined"
@@ -297,14 +319,14 @@ const props = defineProps({
 });
 
 const modes = [
-  { label: "Real time", value: "real-time" },
-  { label: "Playback", value: "playback" },
+  { label: "Real time", value: "RealVideo" },
+  { label: "Playback", value: "PlayBack" },
 ];
 
 const speeds = [0, 1, 2, 4, 8, 16];
 
 // ── State ─────────────────────────────────────────────────────────────────────
-const showMode = ref("all");
+const showMode = ref("RealVideo"); // "RealVideo" | "PlayBack"
 
 const rtState = ref("play"); // "play" | "pause" | "stop"
 const rtSound = ref(true);
@@ -320,17 +342,9 @@ const payloadState = reactive({
   endTime: props.payload.endTime || "",
 });
 
-const decodeVideoUrl = (url) => {
-  try {
-    return url;
-  } catch {
-    return url;
-  }
-};
-
-const newVideoUrl = ref(props.payload.videoUrl || "");
-const videoSrc = ref(newVideoUrl.value ? decodeVideoUrl(newVideoUrl.value) : "");
-
+const videoSrc = ref(
+  "https://superhero.mobileinnovation.asia/vss/apiPage/RealVideo.html?token=deb4cc288714456aa510c3cef0f6b193&deviceId=4002235415&chs=1&stream=0&wnum=1&panel=1&buffer=2000",
+);
 
 const updateUrl = () => {
   const params = new URLSearchParams();
@@ -339,25 +353,17 @@ const updateUrl = () => {
   if (payloadState.chs) params.set("chs", payloadState.chs);
   if (payloadState.startTime) params.set("startTime", payloadState.startTime);
   if (payloadState.endTime) params.set("endTime", payloadState.endTime);
-  if (newVideoUrl.value) params.set("videoUrl", newVideoUrl.value);
 
   const query = params.toString();
-  const newUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+
+  const newUrl =
+    `${showMode.value}` +
+    `${query ? `?${query}` : ""}` +
+    `${window.location.hash}`;
+
+  console.log("Updating URL to:", newUrl);
+
   window.history.replaceState(null, "", newUrl);
-};
-
-const loadVideoUrl = () => {
-  if (!newVideoUrl.value) return;
-  videoSrc.value = decodeVideoUrl(newVideoUrl.value);
-};
-
-const openInNewTab = () => {
-  const url = newVideoUrl.value || videoSrc.value;
-  try {
-    window.open(url, "_blank");
-  } catch (e) {
-    console.warn(e);
-  }
 };
 
 const rtAction = (state) => {
@@ -369,23 +375,31 @@ const pbAction = (state) => {
 
 const initialize = () => {
   if (props.videoType === "RealVideo") {
-    showMode.value = "real-time";
+    showMode.value = "RealVideo";
   } else if (props.videoType === "Playback") {
-    showMode.value = "playback";
+    showMode.value = "PlayBack";
   }
   updateUrl();
 };
 
 watch(
   [
-    () => newVideoUrl.value,
     () => payloadState.deviceId,
     () => payloadState.chs,
     () => payloadState.startTime,
     () => payloadState.endTime,
   ],
-  updateUrl,
+  () => {
+    console.log("payloadState changed", payloadState);
+    updateUrl();
+  },
+  { deep: true },
 );
+
+watch(showMode, () => {
+  console.log("showMode changed", showMode.value);
+  updateUrl();
+});
 
 onMounted(() => {
   initialize();
@@ -434,6 +448,8 @@ onMounted(() => {
 
 /* ── Panels grid ─────────────────────────────────────── */
 .panels {
+  max-width: 1400px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
@@ -533,5 +549,11 @@ onMounted(() => {
     min-width: 100%;
     order: 1;
   }
+}
+
+.external-link {
+  font-size: 12px;
+  color: #3b82f6;
+  text-decoration: none;
 }
 </style>

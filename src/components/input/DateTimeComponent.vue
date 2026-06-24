@@ -20,63 +20,69 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import dayjs from 'dayjs'
+import { computed } from "vue";
+import dayjs from "dayjs";
 
 const props = defineProps({
   modelValue: {
     type: String,
-    default: ''
+    default: "",
   },
   label: {
     type: String,
-    default: ''
-  }
-})
+    default: "",
+  },
+});
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(["update:modelValue"]);
 
 const formatDateTime = (value) => {
   if (!value) {
-    return { date: '', time: '' }
+    return {
+      date: dayjs().format("YYYY-MM-DD"),
+      time: dayjs().format("HH:mm"),
+    };
   }
 
-  const parsed = dayjs(value)
+  const parsed = dayjs(value);
   if (!parsed.isValid()) {
-    return { date: '', time: '' }
+    return {
+      date: dayjs().format("YYYY-MM-DD"),
+      time: dayjs().format("HH:mm"),
+    };
   }
 
   return {
-    date: parsed.format('YYYY-MM-DD'),
-    time: parsed.format('HH:mm')
-  }
-}
+    date: parsed.format("YYYY-MM-DD"),
+    time: parsed.format("HH:mm"),
+  };
+};
 
-const dateValue = computed(() => formatDateTime(props.modelValue).date)
-const timeValue = computed(() => formatDateTime(props.modelValue).time)
+const dateValue = computed(() => formatDateTime(props.modelValue).date);
+const timeValue = computed(() => formatDateTime(props.modelValue).time);
 
 const emitValue = (datePart, timePart) => {
   if (!datePart || !timePart) {
-    emit('update:modelValue', '')
-    return
+    emit("update:modelValue", "");
+    return;
   }
 
-  const [year, month, day] = datePart.split('-')
+  const [year, month, day] = datePart.split("-");
   if (!year || !month || !day) {
-    emit('update:modelValue', '')
-    return
+    emit("update:modelValue", "");
+    return;
   }
 
-  emit('update:modelValue', `${year}-${month}-${day}T${timePart}:00`)
-}
+  emit("update:modelValue", `${year}-${month}-${day}T${timePart}:00`);
+};
 
 const updateDate = (value) => {
-  emitValue(value, timeValue.value)
-}
+  emitValue(value, timeValue.value);
+};
 
 const updateTime = (value) => {
-  emitValue(dateValue.value, value)
-}
+  emitValue(dateValue.value, value);
+};
 </script>
 
 <style scoped>
@@ -85,7 +91,6 @@ const updateTime = (value) => {
   flex-direction: column;
   gap: 0.5rem;
 }
-
 
 .date-time-label {
   font-size: 0.95rem;
