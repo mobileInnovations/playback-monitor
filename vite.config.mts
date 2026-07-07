@@ -1,9 +1,9 @@
-import { fileURLToPath, URL } from 'node:url'
-import tailwindcss from '@tailwindcss/vite'
-import Vue from '@vitejs/plugin-vue'
-import Fonts from 'unplugin-fonts/vite'
-import { defineConfig } from 'vite'
-import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import { fileURLToPath, URL } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
+import Vue from "@vitejs/plugin-vue";
+import Fonts from "unplugin-fonts/vite";
+import { defineConfig } from "vite";
+import Vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -16,62 +16,55 @@ export default defineConfig({
     Vuetify({
       autoImport: true,
       styles: {
-        configFile: 'src/styles/settings.scss',
+        configFile: "src/styles/settings.scss",
       },
     }),
     Fonts({
       fontsource: {
         families: [
           {
-            name: 'Roboto Mono',
+            name: "Roboto Mono",
             weights: [400, 700],
           },
           {
-            name: 'Roboto',
+            name: "Roboto",
             weights: [100, 300, 400, 500, 700, 900],
-            styles: ['normal', 'italic'],
+            styles: ["normal", "italic"],
           },
         ],
       },
     }),
   ],
-  define: { 'process.env': {} },
+  define: { "process.env": {} },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('src', import.meta.url)),
+      "@": fileURLToPath(new URL("src", import.meta.url)),
     },
-    extensions: [
-      '.js',
-      '.json',
-      '.jsx',
-      '.mjs',
-      '.ts',
-      '.tsx',
-      '.vue',
-    ],
+    extensions: [".js", ".json", ".jsx", ".mjs", ".ts", ".tsx", ".vue"],
   },
   server: {
-    port: 6000,
+    allowedHosts: ["fleetviews.mobileinnovation.asia"],
+    port: 1000,
     proxy: {
       // Proxy /vss requests to the remote API to avoid CORS in dev
-      '/vss': {
-        target: 'https://superhero.mobileinnovation.asia',
+      "/vss": {
+        target: "https://superhero.mobileinnovation.asia",
         changeOrigin: true,
         secure: false,
         configure: (proxy) => {
           // Remove headers that block framing when running the dev server.
-          proxy.on('proxyRes', (proxyRes) => {
+          proxy.on("proxyRes", (proxyRes) => {
             try {
-              delete proxyRes.headers['x-frame-options'];
-              delete proxyRes.headers['content-security-policy'];
-              delete proxyRes.headers['x-content-type-options'];
+              delete proxyRes.headers["x-frame-options"];
+              delete proxyRes.headers["content-security-policy"];
+              delete proxyRes.headers["x-content-type-options"];
             } catch (e) {
               // ignore
             }
           });
         },
-        rewrite: (path) => path.replace(/^\/vss/, '/vss'),
+        rewrite: (path) => path.replace(/^\/vss/, "/vss"),
       },
     },
   },
-})
+});

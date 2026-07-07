@@ -55,18 +55,25 @@
             allowfullscreen
           />
         </div>
-        <div>
-          <a
-            v-if="videoSrc"
-            :href="videoSrc"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="external-link"
-          >
-            link video
-          </a>
 
-          <span v-else> No video URL provided </span>
+        <div class="d-flex align-center">
+          <div>
+            <a
+              v-if="videoSrc"
+              :href="videoSrc"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="external-link"
+            >
+              Link Video
+            </a>
+
+            <span v-else>No video URL provided</span>
+          </div>
+
+          <v-spacer />
+
+          <div class="text-token">Token: {{ payloadState.token }}</div>
         </div>
 
         <div class="fields">
@@ -336,6 +343,7 @@ const pbSound = ref(true);
 const pbSpeed = ref(0);
 
 const payloadState = reactive({
+  token: props.payload.token || "",
   deviceId: props.payload.deviceId || "",
   chs: props.payload.chs || "",
   startTime: props.payload.startTime || "",
@@ -343,7 +351,7 @@ const payloadState = reactive({
 });
 
 const videoSrc = ref(
-  "https://superhero.mobileinnovation.asia/vss/apiPage/RealVideo.html?token=deb4cc288714456aa510c3cef0f6b193&deviceId=4002235415&chs=1&stream=0&wnum=1&panel=1&buffer=2000",
+  `https://superhero.mobileinnovation.asia/vss/apiPage/${showMode.value}.html?token=${payloadState.token}&deviceId=${payloadState.deviceId}&chs=${payloadState.chs}&stream=0&wnum=1&panel=1&buffer=2000`,
 );
 
 const updateUrl = () => {
@@ -353,6 +361,7 @@ const updateUrl = () => {
   if (payloadState.chs) params.set("chs", payloadState.chs);
   if (payloadState.startTime) params.set("startTime", payloadState.startTime);
   if (payloadState.endTime) params.set("endTime", payloadState.endTime);
+  if (payloadState.token) params.set("token", payloadState.token);
 
   const query = params.toString();
 
@@ -388,10 +397,13 @@ watch(
     () => payloadState.chs,
     () => payloadState.startTime,
     () => payloadState.endTime,
+    () => payloadState.token,
+    () => showMode.value,
   ],
   () => {
     console.log("payloadState changed", payloadState);
     updateUrl();
+    videoSrc.value = `https://superhero.mobileinnovation.asia/vss/apiPage/${showMode.value}.html?token=${payloadState.token}&deviceId=${payloadState.deviceId}&chs=${payloadState.chs}&stream=0&wnum=1&panel=1&buffer=2000`;
   },
   { deep: true },
 );
@@ -555,5 +567,10 @@ onMounted(() => {
   font-size: 12px;
   color: #3b82f6;
   text-decoration: none;
+}
+
+.text-token {
+  font-size: 12px;
+  color: #64748b;
 }
 </style>
