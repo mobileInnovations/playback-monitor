@@ -51,7 +51,7 @@ export default defineConfig({
     ],
   },
   server: {
-    port: 1010,
+    port: 6000,
     proxy: {
       // Proxy /vss requests to the remote API to avoid CORS in dev
       '/vss': {
