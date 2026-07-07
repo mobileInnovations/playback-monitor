@@ -44,7 +44,7 @@ export default defineConfig({
   },
   server: {
     allowedHosts: ["fleetviews.mobileinnovation.asia"],
-    port: 1000,
+    port: 6000,
     proxy: {
       // Proxy /vss requests to the remote API to avoid CORS in dev
       "/vss": {
