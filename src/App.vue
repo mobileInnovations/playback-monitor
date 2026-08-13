@@ -6,9 +6,10 @@
   </v-app>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from "vue";
-import Monitor from "@/components/Monitor.vue";
+// @ts-ignore: Allow importing Vue SFC without a declaration file
+import Monitor from "./components/Monitor.vue";
 
 const url = new URL(window.location.href);
 const params = new URLSearchParams(window.location.search);
