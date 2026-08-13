@@ -14,48 +14,15 @@
           {{ m.label }}
         </v-btn>
       </div>
-
-      <!-- <v-divider vertical class="mx-2" />
-
-      <v-text-field
-        v-model="newVideoUrl"
-        placeholder="Paste video URL…"
-        density="compact"
-        hide-details
-        variant="outlined"
-        class="url-input"
-      />
-      <v-btn
-        size="small"
-        variant="tonal"
-        prepend-icon="mdi-play"
-        @click="loadVideoUrl"
-        >Load</v-btn
-      >
-      <v-btn
-        size="small"
-        variant="outlined"
-        prepend-icon="mdi-open-in-new"
-        @click="openInNewTab"
-        >Open</v-btn
-      > -->
     </div>
-
     <!-- Panels -->
     <div class="panels" :class="{ single: showMode !== 'all' }">
       <!-- Real Time Panel -->
-      <div v-if="showMode !== 'PlayBack'" class="panel">
+      <div v-if="showMode !== 'Playback'" class="panel">
         <h2>Real time</h2>
         <div class="video-box">
-          <iframe
-            :src="videoSrc"
-            width="100%"
-            height="100%"
-            frameborder="0"
-            allowfullscreen
-          />
+          <iframe :src="videoSrc" frameborder="0" allowfullscreen />
         </div>
-
         <div class="d-flex align-center">
           <div>
             <a
@@ -169,7 +136,7 @@
 
       <!-- Playback Panel -->
       <div v-if="showMode !== 'RealVideo'" class="panel">
-        <h2>Video PlayBack</h2>
+        <h2>Playback</h2>
         <div class="video-box">
           <iframe
             :src="videoSrc"
@@ -313,6 +280,10 @@
 <script setup>
 import { ref, reactive, watch, onMounted } from "vue";
 import DateTimeComponent from "./input/DateTimeComponent.vue";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 
 const props = defineProps({
   videoType: {
@@ -327,13 +298,13 @@ const props = defineProps({
 
 const modes = [
   { label: "Real time", value: "RealVideo" },
-  { label: "Playback", value: "PlayBack" },
+  { label: "Playback", value: "Playback" },
 ];
 
 const speeds = [0, 1, 2, 4, 8, 16];
 
 // ── State ─────────────────────────────────────────────────────────────────────
-const showMode = ref("RealVideo"); // "RealVideo" | "PlayBack"
+const showMode = ref("RealVideo"); // "RealVideo" | "Playback"
 
 const rtState = ref("play"); // "play" | "pause" | "stop"
 const rtSound = ref(true);
@@ -386,7 +357,7 @@ const initialize = () => {
   if (props.videoType === "RealVideo") {
     showMode.value = "RealVideo";
   } else if (props.videoType === "Playback") {
-    showMode.value = "PlayBack";
+    showMode.value = "Playback";
   }
   updateUrl();
 };
@@ -402,16 +373,44 @@ watch(
   ],
   () => {
     console.log("payloadState changed", payloadState);
+
     updateUrl();
-    videoSrc.value = `https://superhero.mobileinnovation.asia/vss/apiPage/${showMode.value}.html?token=${payloadState.token}&deviceId=${payloadState.deviceId}&chs=${payloadState.chs}&stream=0&wnum=1&panel=1&buffer=2000`;
+
+    if (showMode.value === "Playback") {
+      const st = dayjs(payloadState.startTime, "YYYYMMDDHHmmss").format(
+        "YYYYMMDDHHmmss",
+      );
+
+      const et = dayjs(payloadState.endTime, "YYYYMMDDHHmmss").format(
+        "YYYYMMDDHHmmss",
+      );
+
+      videoSrc.value =
+        `https://superhero.mobileinnovation.asia/vss/apiPage/ReplayVideo.html` +
+        `?token=${payloadState.token}` +
+        `&deviceId=${payloadState.deviceId}` +
+        `&chs=${payloadState.chs}` +
+        `&stream=0` +
+        `&wnum=1` +
+        `&panel=1` +
+        `&buffer=2000` +
+        `&st=${st}` +
+        `&et=${et}` +
+        `&speed=${pbSpeed.value}`;
+    } else {
+      videoSrc.value =
+        `https://superhero.mobileinnovation.asia/vss/apiPage/${showMode.value}.html` +
+        `?token=${payloadState.token}` +
+        `&deviceId=${payloadState.deviceId}` +
+        `&chs=${payloadState.chs}` +
+        `&stream=0` +
+        `&wnum=1` +
+        `&panel=1` +
+        `&buffer=2000`;
+    }
   },
   { deep: true },
 );
-
-watch(showMode, () => {
-  console.log("showMode changed", showMode.value);
-  updateUrl();
-});
 
 onMounted(() => {
   initialize();
