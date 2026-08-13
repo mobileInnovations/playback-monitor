@@ -60,3 +60,5 @@ vite.config.timestamp-*
 
 # Generated files
 *.tsbuildinfo
+
+deploymentguide.md
