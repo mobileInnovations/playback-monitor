@@ -311,7 +311,7 @@ const rtSound = ref(true);
 
 const pbState = ref("play"); // "play" | "pause" | "stop"
 const pbSound = ref(true);
-const pbSpeed = ref(0);
+const pbSpeed = ref(1);
 
 const payloadState = reactive({
   token: props.payload.token || "",
@@ -370,6 +370,7 @@ watch(
     () => payloadState.endTime,
     () => payloadState.token,
     () => showMode.value,
+    () => pbSpeed.value,
   ],
   () => {
     console.log("payloadState changed", payloadState);
@@ -390,7 +391,6 @@ watch(
         `?token=${payloadState.token}` +
         `&deviceId=${payloadState.deviceId}` +
         `&chs=${payloadState.chs}` +
-        `&stream=0` +
         `&wnum=1` +
         `&panel=1` +
         `&buffer=2000` +
