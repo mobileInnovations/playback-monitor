@@ -411,6 +411,7 @@ const initialize = () => {
 };
 
 window.addEventListener("message", (event) => {
+  console.log("Received message from iframe:", event);
   if (event.data?.type === "STOP_VIDEO") {
     const video = document.querySelector("video");
 
@@ -563,11 +564,8 @@ onMounted(() => {
 
 /* ── Video (16:9 landscape) ───────────────────────────── */
 .video-box {
-  flex: 0 1 auto;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: 40vh; /* new — prevents video alone from eating the screen */
-  border-radius: 8px;
+  aspect-ratio: 5 / 4;
   background: #000;
   overflow: hidden;
   position: relative;
