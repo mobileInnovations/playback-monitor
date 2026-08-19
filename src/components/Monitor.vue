@@ -562,10 +562,10 @@ onMounted(() => {
   margin: 0;
 }
 
-/* ── Video (4:3 landscape) ───────────────────────────── */
+/* ── Video (16:9 landscape) ───────────────────────────── */
 .video-box {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
   background: #000;
   overflow: hidden;
   position: relative;
