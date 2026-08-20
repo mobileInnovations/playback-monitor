@@ -26,7 +26,6 @@
             :src="videoSrc"
             frameborder="0"
             allow="autoplay; fullscreen"
-            allowfullscreen
           />
         </div>
         <div class="d-flex align-center meta-row">
@@ -156,7 +155,6 @@
             :src="videoSrc"
             frameborder="0"
             allow="autoplay; fullscreen"
-            allowfullscreen
           />
         </div>
         <div class="meta-row">
